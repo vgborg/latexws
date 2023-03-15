@@ -5,12 +5,19 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 
     <style>
-        #formula-image-container img {
+        #formula-image-container img, #formula-image-container .svg-container {
             padding: 20px;
             margin: 40px;
             margin-left: 0;
-            border: 1px
-            solid #eee;
+            border: 1px solid #eee;
+        }
+
+        #formula-image-container .error {
+            padding: 20px;
+            margin: 40px;
+            margin-left: 0;
+            border: 1px solid #ff0000;
+            color: #ff0000;
         }
 
         form {
@@ -51,7 +58,8 @@
     <h1>LaTeX formula webservice</h1>
 
     <form>
-        <textarea  id="inp-formula" rows="10" cols="100"></textarea>
+        <textarea  id="inp-formula" rows="10" cols="100"></textarea><br/>
+        <input type="number" id="inp-size" value="20" />
     </form>
 
     <a class="btn btn-primary btn-rounded" href="#" role="button" id="btn-refresh">Refresh</a>
@@ -122,27 +130,34 @@
 
     <script type="text/javascript"><!--
     $(function() {
-        $("#btn-refresh").click(function() {
-            refresh();
-            return false;
-        });
-        $("#inp-formula").keyup(function() {
-            refresh();
-        });
+        $("#btn-refresh").click(function() { refresh(); return false; });
+        $("#inp-formula").keyup(function() { refresh(); });
+        $("#inp-size").keyup(function() { refresh(); });
+        $("#inp-size").change(function() { refresh(); });
     });
 
     function refresh() {
         var formula = $("#inp-formula").val();
-        console.log("refresh formula: " + formula);
+        var size = $("#inp-size").val();
+        console.log("refresh formula: " + formula + ", size=" + size);
 
-        var content = "";
+        $("#formula-image-container").html("");
+
         if (formula != "") {
-            var imageUrl = "/api/latex/svg/?formula=" +  encodeURIComponent(formula);
-            content = "<img src=\"" + imageUrl + "\">";
-            content += "<br/><img src=\"" + imageUrl + "&size=50\">";
+            var imageUrl = "/api/latex/svg/?formula=" +  encodeURIComponent(formula) + "&size=" + encodeURIComponent(size);
 
+            // preflight check
+            $.get(imageUrl)
+                .done(function(data, textStatus, jqHHR) {
+                    var content = "<div class=\"svg-container\">" + jqHHR.responseText + "</div>";
+                    $("#formula-image-container").html(content);
+                })
+                .fail(function(data, textStatus, jqHHR) {
+                    console.log("failed request: " + imageUrl + "\n" + data.responseText);
+                    var content = "<div class=\"error\">" + data.responseText + "</div>";
+                    $("#formula-image-container").html(content);
+                });
         }
-        $("#formula-image-container").html(content);
     }
 
     function setFormula(formula) {

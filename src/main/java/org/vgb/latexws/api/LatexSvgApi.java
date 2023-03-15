@@ -4,18 +4,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGeneratorContext;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.scilab.forge.jlatexmath.DefaultTeXFont;
-import org.scilab.forge.jlatexmath.TeXConstants;
-import org.scilab.forge.jlatexmath.TeXFormula;
-import org.scilab.forge.jlatexmath.TeXIcon;
+import org.scilab.forge.jlatexmath.*;
 import org.scilab.forge.jlatexmath.cyrillic.CyrillicRegistration;
 import org.scilab.forge.jlatexmath.greek.GreekRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
@@ -60,6 +58,13 @@ public class LatexSvgApi {
         ) throws IOException {
 
         return toSVG(formula, size, insets, fontAsShapes);
+    }
+
+    @ExceptionHandler({ParseException.class})
+    public ResponseEntity<Object> handleException(Exception e, WebRequest request) {
+        ParseException pe = (ParseException) e;
+
+        return new ResponseEntity<>(e.getMessage(), new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
     public static byte[] toSVG(String latex, float size, int insets, boolean fontAsShapes) throws IOException {
